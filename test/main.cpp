@@ -1,7 +1,6 @@
 #include <iostream>
 #include <sstream>
-
-#include "../src/serializer.h"
+#include <serializer.h>
 
 using namespace srz;
 
