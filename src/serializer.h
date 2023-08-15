@@ -3,6 +3,7 @@
 
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <iostream>
 
 namespace srz
 {
@@ -12,6 +13,7 @@ using namespace nlohmann;
 class Syncable
 {
 public:
+    virtual ~Syncable(){};
     virtual void save(json& j) = 0;
     virtual void load(const json& j) = 0;
 };
@@ -93,8 +95,9 @@ void Sync<T>::load(const json &j)
 class Serializable
 {
 public:
-    void save(json& j);
-    void load(const json& j);
+    virtual void save(json& j) const;
+    virtual void load(const json& j);
+    virtual ~Serializable(){};
 protected:
     template <typename T>
     void sync(T* ptr, const std::string& name)
@@ -106,10 +109,38 @@ private:
     std::vector<std::shared_ptr<Syncable>> mSyncs;
 };
 
-class SerializableArray : public Serializable
+template <typename T>
+class SerializableVector : public Serializable
 {
-protected:
+public:
+    void save(json &j) const override
+    {
+        for(const auto& elem : mVec)
+        {
+            json jElem;
+            elem.save(jElem);
+            j.push_back(std::move(jElem));
+        }
+    }
 
+    void load(const json &j) override
+    {
+        mVec.clear();
+        for(const auto& elem : j)
+        {
+            T t;
+            t.load(elem);
+            mVec.push_back(std::move(t));
+        }
+    }
+
+    std::vector<T>& get()
+    {
+        return mVec;
+    }
+
+private:
+    std::vector<T> mVec;
 };
 
 }

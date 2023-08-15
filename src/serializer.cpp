@@ -1,6 +1,6 @@
 #include "serializer.h"
 
-void srz::Serializable::save(nlohmann::json &j)
+void srz::Serializable::save(nlohmann::json &j) const
 {
     for(const auto& sync : mSyncs)
         sync->save(j);

@@ -6,12 +6,16 @@ using namespace srz;
 
 struct Point : public Serializable
 {
+    Point() : Point(0, 0)
+    {
+    }
+
     Point(const int& x, const int& y)
     {
-        mX = x;
-        mY = y;
         sync(&mX, "x");
         sync(&mY, "y");
+        mX = x;
+        mY = y;
     }
 
     std::string toString()
@@ -26,20 +30,25 @@ struct Point : public Serializable
 
 struct Line : public Serializable
 {
-    Line(const Point& a, const Point& b) : mA(a), mB(b)
+    Line() : Line({0, 0}, {0, 0})
     {
-        sync(&mA, "a");
-        sync(&mB, "b");
+
+    }
+    Line(const Point& a, const Point& b)
+    {
+        mPoints.get().push_back(a);
+        mPoints.get().push_back(b);
+        sync(&mPoints, "points");
     }
 
     std::string toString()
     {
         std::stringstream ss;
-        ss<<mA.toString()<<", "<<mB.toString();
+        ss<<mPoints.get()[0].toString()<<", "<<mPoints.get()[1].toString();
         return ss.str();
     }
 
-    Point mA, mB;
+    SerializableVector<Point> mPoints;
 };
 
 int main()
