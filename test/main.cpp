@@ -12,8 +12,10 @@ struct Point : public Serializable
 
     Point(const int& x, const int& y)
     {
+        mName = "test";
         sync(&mX, "x");
         sync(&mY, "y");
+        sync(&mName, "name");
         mX = x;
         mY = y;
     }
@@ -26,6 +28,7 @@ struct Point : public Serializable
     }
 
     int mX, mY;
+    std::string mName;
 };
 
 struct Line : public Serializable
