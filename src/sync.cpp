@@ -1,4 +1,4 @@
-#include "serializer.h"
+#include "sync.h"
 
 void sync::Serializable::save(nlohmann::json &j)
 {

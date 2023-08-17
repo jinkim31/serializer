@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_subdirectory(lib/json)
 include_directories(lib/json/include)
 
-add_library(sync STATIC src/serializer.cpp)
+add_library(sync STATIC src/sync.cpp)
 target_link_libraries(sync PRIVATE nlohmann_json::nlohmann_json)
 target_include_directories(sync PUBLIC src)
 
