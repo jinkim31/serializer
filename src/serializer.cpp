@@ -1,13 +1,19 @@
 #include "serializer.h"
 
-void srz::Serializable::save(nlohmann::json &j) const
+void sync::Serializable::save(nlohmann::json &j)
 {
+    mSyncs.clear();
+    listSync();
     for(const auto& sync : mSyncs)
         sync->save(j);
+    onSyncSave();
 }
 
-void srz::Serializable::load(const nlohmann::json &j)
+void sync::Serializable::load(const nlohmann::json &j)
 {
+    mSyncs.clear();
+    listSync();
     for(const auto& sync : mSyncs)
         sync->load(j);
+    onSyncLoad();
 }

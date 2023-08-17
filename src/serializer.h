@@ -6,7 +6,7 @@
 #include <iostream>
 #include <concepts>
 
-namespace srz
+namespace sync
 {
 
 // forward decl
@@ -98,10 +98,13 @@ void Sync<T>::load(const json &j)
 class Serializable
 {
 public:
-    virtual void save(json& j) const;
+    virtual void save(json& j);
     virtual void load(const json& j);
-    virtual ~Serializable()= default;
 protected:
+    virtual ~Serializable()= default;
+    virtual void listSync(){};
+    virtual void onSyncSave(){};
+    virtual void onSyncLoad(){};
     template <typename T>
     void sync(T* ptr, const std::string& name)
     {
@@ -116,18 +119,17 @@ template <typename T>
 class SerializableVector : public Serializable
 {
 public:
-    void save(json &j) const override;
+    void save(json &j) override;
     void load(const json &j) override;
     std::vector<T>& get();
-
 private:
     std::vector<T> mVec;
 };
 
 template<typename T>
-void SerializableVector<T>::save(json &j) const
+void SerializableVector<T>::save(json &j)
 {
-    for(const auto& elem : mVec)
+    for(auto& elem : mVec)
     {
         json jElem;
         elem.save(jElem);
@@ -157,14 +159,14 @@ template <typename KeyType, typename ValueType>
 class SerializableMap : public Serializable
 {
 public:
-    void save(json &j) const override;
+    void save(json &j) override;
     void load(const json &j) override;
 private:
     std::map<KeyType, ValueType> mMap;
 };
 
 template <typename KeyType, typename ValueType>
-void SerializableMap<KeyType, ValueType>::save(json &j) const
+void SerializableMap<KeyType, ValueType>::save(json &j)
 {
     for(const auto& elem : mMap)
     {

@@ -2,7 +2,7 @@
 #include <sstream>
 #include <serializer.h>
 
-using namespace srz;
+using namespace sync;
 
 struct Point : public Serializable
 {
@@ -13,13 +13,19 @@ struct Point : public Serializable
     Point(const int& x, const int& y)
     {
         mName = "test";
-        sync(&mX, "x");
-        sync(&mY, "y");
-        sync(&mName, "name");
         mX = x;
         mY = y;
     }
 
+protected:
+    void listSync() override
+    {
+        sync(&mX, "x");
+        sync(&mY, "y");
+        sync(&mName, "name");
+    }
+
+public:
     std::string toString()
     {
         std::stringstream ss;
@@ -41,7 +47,6 @@ struct Line : public Serializable
     {
         mPoints.get().push_back(a);
         mPoints.get().push_back(b);
-        sync(&mPoints, "points");
     }
 
     std::string toString()
@@ -50,7 +55,12 @@ struct Line : public Serializable
         ss<<mPoints.get()[0].toString()<<", "<<mPoints.get()[1].toString();
         return ss.str();
     }
-
+protected:
+    void listSync() override
+    {
+        sync(&mPoints, "points");
+    }
+private:
     SerializableVector<Point> mPoints;
 };
 
