@@ -1,5 +1,5 @@
-#ifndef MODELER_MODELER_H
-#define MODELER_MODELER_H
+#ifndef SYNC_SYNC_H
+#define SYNC_SYNC_H
 
 #include <nlohmann/json.hpp>
 #include <fstream>
