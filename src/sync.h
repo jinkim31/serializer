@@ -32,13 +32,13 @@ struct Saver{};
 template<typename T> struct Saver<T, true>
 {
     T* mPtr;
-    void save(json &j){mPtr->save(j);}
+    void save(json &j) {mPtr->save(j);}
 };
 
 template<typename T> struct Saver<T, false>
 {
-    const T* mPtr;
-    void save(json &j){j = *(mPtr);}
+    T* mPtr;
+    void save(json &j) {j = *(mPtr);}
 };
 
 template <typename T, bool>
@@ -118,7 +118,6 @@ public:
     std::vector<T>& get();
 private:
     std::vector<T> mVec;
-    Saver<T, std::derived_from<T, Serializable>> mSaver;
     Loader<T, std::derived_from<T, Serializable>> mLoader;
 };
 
@@ -128,7 +127,7 @@ void SerializableVector<T>::save(json &j)
     for(auto& elem : mVec)
     {
         json jElem;
-        mSaver.mPtr = &elem;
+        Saver<T, std::derived_from<T, Serializable>> mSaver{&elem};
         mSaver.save(jElem);
         j.push_back(std::move(jElem));
     }
@@ -162,8 +161,6 @@ public:
     std::map<KeyType, ValueType>& get();
 private:
     std::map<KeyType, ValueType> mMap;
-    Saver<KeyType, std::derived_from<KeyType, Serializable>> mKeySaver;
-    Saver<ValueType, std::derived_from<ValueType, Serializable>> mValueSaver;
     Loader<KeyType, std::derived_from<KeyType, Serializable>> mKeyLoader;
     Loader<ValueType, std::derived_from<ValueType, Serializable>> mValueLoader;
 };
@@ -171,11 +168,11 @@ private:
 template <typename KeyType, typename ValueType>
 void SerializableMap<KeyType, ValueType>::save(json &j)
 {
-    for(const auto& elem : mMap)
+    for(auto& elem : mMap)
     {
         json jElem;
-        mKeySaver.mPtr = &elem.first;
-        mValueSaver.mPtr = &elem.second;
+        Saver<KeyType, std::derived_from<KeyType, Serializable>> mKeySaver{&elem.first};
+        Saver<ValueType, std::derived_from<ValueType, Serializable>> mValueSaver{&elem.second};
         mKeySaver.save(jElem["key"]);
         mValueSaver.save(jElem["Value"]);
         j.push_back(std::move(jElem));
@@ -188,6 +185,7 @@ void SerializableMap<KeyType, ValueType>::load(const json &j)
     mMap.clear();
     for(const auto& jElem : j)
     {
+        std::cout<<"loading"<<j<<std::endl;
         KeyType key;
         ValueType value;
         mKeyLoader.mPtr = &key;
