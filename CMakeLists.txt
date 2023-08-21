@@ -6,8 +6,7 @@ add_subdirectory(lib/json)
 include_directories(lib/json/include)
 
 add_library(sync STATIC src/sync.cpp)
-target_link_libraries(sync PRIVATE nlohmann_json::nlohmann_json)
-target_include_directories(sync PUBLIC src)
+target_include_directories(sync PUBLIC src lib/json/include)
 
 add_executable(test test/main.cpp)
 target_link_libraries(test PRIVATE sync)
