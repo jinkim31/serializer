@@ -66,6 +66,7 @@ private:
 
 int main()
 {
+    /*
     // make line to save
     Line lineSave({100, 200}, {300, 400});
     // save
@@ -83,4 +84,39 @@ int main()
     save = json::parse(fi);
     lineLoad.load(save);
     std::cout<<"Loaded line: "<<lineSave.toString()<<std::endl;
+     */
+
+    /*
+    SerializableVector<int> vec;
+    vec.get().emplace_back(1);
+    vec.get().emplace_back(2);
+    vec.get().emplace_back(3);
+
+    json j;
+    vec.save(j);
+    std::ofstream fo("out.json");
+    fo<< std::setw(4) << j << std::endl;
+    fo.close();
+
+    SerializableVector<int> loadVec;
+    loadVec.load(j);
+    for(const auto& elem : loadVec.get())
+        std::cout<<elem<<std::endl;
+        */
+
+    SerializableMap<std::string, int> map;
+    map.get().emplace("a", 1);
+    map.get().emplace("b", 2);
+    map.get().emplace("c", 3);
+
+    json j;
+    map.save(j);
+
+    SerializableMap<std::string, int> mapLoad;
+    mapLoad.load(j);
+    for(const auto& [a, b] : mapLoad.get())
+    {
+        std::cout<<a<<b<<std::endl;
+    }
+
 }
