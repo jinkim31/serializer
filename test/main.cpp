@@ -66,6 +66,7 @@ private:
 
 int main()
 {
+    /*
     // make line to save
     Line lineSave({100, 200}, {300, 400});
     // save
@@ -83,6 +84,7 @@ int main()
     save = json::parse(fi);
     lineLoad.load(save);
     std::cout<<"Loaded line: "<<lineSave.toString()<<std::endl;
+     */
 
     /*
     SerializableVector<int> vec;
@@ -102,7 +104,6 @@ int main()
         std::cout<<elem<<std::endl;
         */
 
-    /*
     SerializableMap<std::string, Point> map;
     map.get().emplace("a", Point(1,2));
     map.get().emplace("b", Point(2,3));
@@ -114,11 +115,10 @@ int main()
     fo<< std::setw(4) << j << std::endl;
     fo.close();
 
-    SerializableMap<std::string, int> mapLoad;
+    SerializableMap<std::string, Point> mapLoad;
     mapLoad.load(j);
-    for(const auto& [a, b] : mapLoad.get())
+    for(auto& [a, b] : mapLoad.get())
     {
-        std::cout<<a<<b<<std::endl;
+        std::cout<<a<<b.toString()<<std::endl;
     }
-     */
 }

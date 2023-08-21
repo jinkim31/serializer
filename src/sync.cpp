@@ -17,7 +17,6 @@ void sync::Serializable::load(const nlohmann::json &j)
     listSync();
     for(const auto& sync : mSyncs)
     {
-        std::cout<<"loading"<<sync->name()<<std::endl;
         sync->load(j[sync->name()]);
     }
     onSyncLoad();

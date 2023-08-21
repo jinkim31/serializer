@@ -171,10 +171,10 @@ void SerializableMap<KeyType, ValueType>::save(json &j)
     for(auto& elem : mMap)
     {
         json jElem;
-        Saver<KeyType, std::derived_from<KeyType, Serializable>> mKeySaver{&elem.first};
-        Saver<ValueType, std::derived_from<ValueType, Serializable>> mValueSaver{&elem.second};
+        Saver<KeyType, std::derived_from<KeyType, Serializable>> mKeySaver{const_cast<KeyType*>(&elem.first)};
+        Saver<ValueType, std::derived_from<ValueType, Serializable>> mValueSaver{const_cast<ValueType*>(&elem.second)};
         mKeySaver.save(jElem["key"]);
-        mValueSaver.save(jElem["Value"]);
+        mValueSaver.save(jElem["value"]);
         j.push_back(std::move(jElem));
     }
 }
@@ -185,13 +185,12 @@ void SerializableMap<KeyType, ValueType>::load(const json &j)
     mMap.clear();
     for(const auto& jElem : j)
     {
-        std::cout<<"loading"<<j<<std::endl;
         KeyType key;
         ValueType value;
         mKeyLoader.mPtr = &key;
         mValueLoader.mPtr = &value;
         mKeyLoader.load(jElem["key"]);
-        mValueLoader.load(jElem["Value"]);
+        mValueLoader.load(jElem["value"]);
         mMap.emplace(std::move(key), std::move(value));
     }
 }
