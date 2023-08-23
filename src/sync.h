@@ -253,6 +253,8 @@ void SerializablePolymorphicVector<T>::load(const json &j)
     {
         PolymorphicSharedPtr elem;
         std::shared_ptr<T> ptr = mFactory(jElem["type"]);
+        if(!ptr)
+            throw std::runtime_error("[Sync] Factory returned nullptr while SerializablePolymorphicVector load().");
         mLoader.mPtr = ptr.get();
         mLoader.load(jElem["data"]);
         mVec.push_back({ptr, jElem["type"]});

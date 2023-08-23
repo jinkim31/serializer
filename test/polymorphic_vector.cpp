@@ -9,7 +9,7 @@ public:
     {
         mName = "unnamed";
     }
-    virtual void printName() =0;
+    virtual void print() =0;
     void setName(const std::string& name)
     {
         mName = name;
@@ -27,7 +27,7 @@ public:
         sync(&mDogFeature, "dog_feature");
     }
 
-    virtual void printName() override
+    virtual void print() override
     {
         std::cout<<mName<<"(Dog)"<<std::endl;
     }
@@ -45,7 +45,7 @@ public:
         sync(&mCatFeature, "cat_feature");
     }
 
-    virtual void printName() override
+    virtual void print() override
     {
         std::cout<<mName<<"(Cat)"<<std::endl;
     }
@@ -69,7 +69,7 @@ int main()
     vec.get().push_back({std::make_shared<Cat>(), "Cat"});
     for(const auto& animal : vec.get())
     {
-        animal.ptr->printName();
+        animal.ptr->print();
     }
 
     json save;
@@ -80,7 +80,7 @@ int main()
     vecLoad.load(save);
     for(const auto& animal : vecLoad.get())
     {
-        animal.ptr->printName();
+        animal.ptr->print();
     }
     return 0;
 }
