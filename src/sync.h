@@ -208,7 +208,9 @@ public:
         std::shared_ptr<T> ptr;
         std::string typeName;
     };
-    SerializablePolymorphicVector(const std::function<std::shared_ptr<T>(const std::string&)> &factory);
+    SerializablePolymorphicVector();
+    void setFactory(const std::function<std::shared_ptr<T>(const std::string&)> &factory);
+    std::shared_ptr<T> pushFromFactory(const std::string& typeName);
     std::vector<PolymorphicSharedPtr>& get();
     void save(nlohmann::json &j) override;
     void load(const nlohmann::json &j) override;
@@ -219,9 +221,23 @@ private:
 };
 
 template<typename T>
-SerializablePolymorphicVector<T>::SerializablePolymorphicVector(const std::function<std::shared_ptr<T>(const std::string&)> &factory)
+SerializablePolymorphicVector<T>::SerializablePolymorphicVector()
+{
+    mFactory = nullptr;
+}
+
+template<typename T>
+void SerializablePolymorphicVector<T>::setFactory(const std::function<std::shared_ptr<T>(const std::string&)> &factory)
 {
     mFactory = factory;
+}
+
+template<typename T>
+std::shared_ptr<T> SerializablePolymorphicVector<T>::pushFromFactory(const std::string& typeName)
+{
+    auto ptr = mFactory(typeName);
+    mVec.push_back({ptr, typeName});
+    return ptr;
 }
 
 template<typename T>
@@ -246,6 +262,8 @@ void SerializablePolymorphicVector<T>::save(nlohmann::json &j)
 template<typename T>
 void SerializablePolymorphicVector<T>::load(const nlohmann::json &j)
 {
+    if(!mFactory)
+        throw std::runtime_error("[Sync] Factory for SerializablePolymorphicVector is not assigned. Load failed.");
     mVec.clear();
     for(const auto& jElem : j)
     {
