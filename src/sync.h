@@ -200,7 +200,7 @@ std::map<KeyType, ValueType>& SerializableMap<KeyType, ValueType>::get()
 }
 
 template <typename T>
-class SerializablePolymorphicVector : Serializable
+class SerializablePolymorphicVector : public Serializable
 {
 public:
     struct PolymorphicSharedPtr
