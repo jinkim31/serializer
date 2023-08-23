@@ -129,6 +129,7 @@ void SerializableVector<T>::save(nlohmann::json &j)
         mSaver.save(jElem);
         j.push_back(std::move(jElem));
     }
+    onSyncSave();
 }
 
 template<typename T>
@@ -142,6 +143,7 @@ void SerializableVector<T>::load(const nlohmann::json &j)
         mLoader.load(jElem);
         mVec.push_back(std::move(elem));
     }
+    onSyncLoad();
 }
 
 template<typename T>
@@ -175,6 +177,7 @@ void SerializableMap<KeyType, ValueType>::save(nlohmann::json &j)
         mValueSaver.save(jElem["value"]);
         j.push_back(std::move(jElem));
     }
+    onSyncSave();
 }
 
 template <typename KeyType, typename ValueType>
@@ -191,6 +194,7 @@ void SerializableMap<KeyType, ValueType>::load(const nlohmann::json &j)
         mValueLoader.load(jElem["value"]);
         mMap.emplace(std::move(key), std::move(value));
     }
+    onSyncLoad();
 }
 
 template <typename KeyType, typename ValueType>
@@ -257,6 +261,7 @@ void SerializablePolymorphicVector<T>::save(nlohmann::json &j)
         mSaver.save(jElem["data"]);
         j.push_back(std::move(jElem));
     }
+    onSyncSave();
 }
 
 template<typename T>
@@ -275,6 +280,7 @@ void SerializablePolymorphicVector<T>::load(const nlohmann::json &j)
         mLoader.load(jElem["data"]);
         mVec.push_back({ptr, jElem["type"]});
     }
+    onSyncLoad();
 }
 
 }
