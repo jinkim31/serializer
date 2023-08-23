@@ -10,3 +10,6 @@ target_include_directories(sync PUBLIC src lib/json/include)
 
 add_executable(test test/main.cpp)
 target_link_libraries(test PRIVATE sync)
+
+add_executable(test_polymorphic_vector test/polymorphic_vector.cpp)
+target_link_libraries(test_polymorphic_vector PRIVATE sync)

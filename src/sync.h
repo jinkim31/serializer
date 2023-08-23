@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <concepts>
+#include <functional>
 
 namespace sync
 {
@@ -26,30 +27,29 @@ private:
     std::string mName;
 };
 
+
+// function wrappers for save function partial specialization
 template <typename T, bool>
 struct Saver{};
-
 template<typename T> struct Saver<T, true>
 {
     T* mPtr;
     void save(json &j) {mPtr->save(j);}
 };
-
 template<typename T> struct Saver<T, false>
 {
     T* mPtr;
     void save(json &j) {j = *(mPtr);}
 };
 
+// function wrappers for load function partial specialization
 template <typename T, bool>
 struct Loader{};
-
 template<typename T> struct Loader<T, true>
 {
     T* mPtr;
     void load(const json &j){mPtr->load(j);}
 };
-
 template<typename T> struct Loader<T, false>
 {
     T* mPtr;
@@ -199,6 +199,64 @@ template <typename KeyType, typename ValueType>
 std::map<KeyType, ValueType>& SerializableMap<KeyType, ValueType>::get()
 {
     return mMap;
+}
+
+template <typename T>
+class SerializablePolymorphicVector : Serializable
+{
+public:
+    struct PolymorphicSharedPtr
+    {
+        std::shared_ptr<T> ptr;
+        std::string typeName;
+    };
+    SerializablePolymorphicVector(const std::function<std::shared_ptr<T>(const std::string&)> &factory);
+    std::vector<PolymorphicSharedPtr>& get();
+    void save(json &j) override;
+    void load(const json &j) override;
+private:
+    std::vector<PolymorphicSharedPtr> mVec;
+    std::function<std::shared_ptr<T>(const std::string&)> mFactory;
+    Loader<T, std::derived_from<T, Serializable>> mLoader;
+};
+
+template<typename T>
+SerializablePolymorphicVector<T>::SerializablePolymorphicVector(const std::function<std::shared_ptr<T>(const std::string&)> &factory)
+{
+    mFactory = factory;
+}
+
+template<typename T>
+std::vector<typename SerializablePolymorphicVector<T>::PolymorphicSharedPtr> &SerializablePolymorphicVector<T>::get()
+{
+    return mVec;
+}
+
+template<typename T>
+void SerializablePolymorphicVector<T>::save(json &j)
+{
+    for(auto& elem : mVec)
+    {
+        json jElem;
+        Saver<T, std::derived_from<T, Serializable>> mSaver{elem.ptr.get()};
+        jElem["type"] = elem.typeName;
+        mSaver.save(jElem["data"]);
+        j.push_back(std::move(jElem));
+    }
+}
+
+template<typename T>
+void SerializablePolymorphicVector<T>::load(const json &j)
+{
+    mVec.clear();
+    for(const auto& jElem : j)
+    {
+        PolymorphicSharedPtr elem;
+        std::shared_ptr<T> ptr = mFactory(jElem["type"]);
+        mLoader.mPtr = ptr.get();
+        mLoader.load(jElem["data"]);
+        mVec.push_back({ptr, jElem["type"]});
+    }
 }
 
 }
