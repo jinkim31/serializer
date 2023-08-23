@@ -320,7 +320,7 @@ std::shared_ptr<ValueType>
 SerializablePolymorphicMap<KeyType, ValueType>::pushFromFactory(const KeyType &key, const std::string &typeName)
 {
     auto ptr = mFactory(typeName);
-    mMap.push_back({ptr, typeName});
+    mMap.insert(std::pair<KeyType, PolymorphicSharedPtr<ValueType>>(std::move(key), {ptr, typeName}));
     return ptr;
 }
 

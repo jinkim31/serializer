@@ -82,7 +82,8 @@ int main()
     SerializablePolymorphicMap<int, Animal> map;
     map.setFactory(factory);
     map.get().insert({0, {std::make_shared<Dog>(), "Dog"}});
-    map.get().insert({1, {std::make_shared<Cat>(), "Cat"}});
+    //map.get().insert({1, {std::make_shared<Cat>(), "Cat"}});
+    map.pushFromFactory(1, "Cat");
     for(const auto& animal : map.get())
     {
         std::cout<<"id "<<animal.first<<": ";
