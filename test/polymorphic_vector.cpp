@@ -1,4 +1,5 @@
 #include <sync.h>
+#include <cstdlib>
 
 using namespace sync;
 
@@ -9,11 +10,11 @@ public:
     {
         mName = "unnamed";
     }
-    virtual void print() =0;
-    void setName(const std::string& name)
+    virtual void listSync() override
     {
-        mName = name;
+        sync(&mName, "name");
     }
+    virtual void print() =0;
 protected:
     std::string mName;
 };
@@ -21,9 +22,15 @@ protected:
 class Dog : public Animal
 {
 public:
+    Dog()
+    {
+        mDogFeature = std::rand();
+        mName = "Dog"+std::to_string(mDogFeature);
+    }
+
     virtual void listSync() override
     {
-        sync(&mName, "name");
+        Animal::listSync();
         sync(&mDogFeature, "dog_feature");
     }
 
@@ -39,9 +46,15 @@ private:
 class Cat : public Animal
 {
 public:
+    Cat()
+    {
+        mCatFeature = std::rand();
+        mName = "Cat"+std::to_string(mCatFeature);
+    }
+
     virtual void listSync() override
     {
-        sync(&mName, "name");
+        Animal::listSync();
         sync(&mCatFeature, "cat_feature");
     }
 
@@ -64,6 +77,8 @@ std::shared_ptr<Animal> factory(const std::string& typeName)
 
 int main()
 {
+    std::srand(0);
+
     SerializablePolymorphicVector<Animal> vec(factory);
     vec.get().push_back({std::make_shared<Dog>(), "Dog"});
     vec.get().push_back({std::make_shared<Cat>(), "Cat"});
