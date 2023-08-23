@@ -13,15 +13,13 @@ namespace sync
 // forward decl
 class Serializable;
 
-using namespace nlohmann;
-
 class Syncable
 {
 public:
     Syncable(const std::string& name){mName = name;}
     virtual ~Syncable()= default;
-    virtual void save(json& j) = 0;
-    virtual void load(const json& j) = 0;
+    virtual void save(nlohmann::json& j) = 0;
+    virtual void load(const nlohmann::json& j) = 0;
     std::string& name(){return mName;}
 private:
     std::string mName;
@@ -34,12 +32,12 @@ struct Saver{};
 template<typename T> struct Saver<T, true>
 {
     T* mPtr;
-    void save(json &j) {mPtr->save(j);}
+    void save(nlohmann::json &j) {mPtr->save(j);}
 };
 template<typename T> struct Saver<T, false>
 {
     T* mPtr;
-    void save(json &j) {j = *(mPtr);}
+    void save(nlohmann::json &j) {j = *(mPtr);}
 };
 
 // function wrappers for load function partial specialization
@@ -48,12 +46,12 @@ struct Loader{};
 template<typename T> struct Loader<T, true>
 {
     T* mPtr;
-    void load(const json &j){mPtr->load(j);}
+    void load(const nlohmann::json &j){mPtr->load(j);}
 };
 template<typename T> struct Loader<T, false>
 {
     T* mPtr;
-    void load(const json &j){*(mPtr) = j;}
+    void load(const nlohmann::json &j){*(mPtr) = j;}
 };
 
 template <typename T>
@@ -61,8 +59,8 @@ class Sync : public Syncable
 {
 public:
     Sync(T* ptr, const std::string& name);
-    void save(json &j) override;
-    void load(const json &j) override;
+    void save(nlohmann::json &j) override;
+    void load(const nlohmann::json &j) override;
 private:
     T* mPtr;
     Saver<T, std::derived_from<T, Serializable>> mSaver;
@@ -78,13 +76,13 @@ Sync<T>::Sync(T *ptr, const std::string &name) : Syncable(name)
 }
 
 template<typename T>
-void Sync<T>::save(json &j)
+void Sync<T>::save(nlohmann::json &j)
 {
     mSaver.save(j);
 }
 
 template<typename T>
-void Sync<T>::load(const json &j)
+void Sync<T>::load(const nlohmann::json &j)
 {
     mLoader.load(j);
 }
@@ -92,8 +90,8 @@ void Sync<T>::load(const json &j)
 class Serializable
 {
 public:
-    virtual void save(json& j);
-    virtual void load(const json& j);
+    virtual void save(nlohmann::json& j);
+    virtual void load(const nlohmann::json& j);
 protected:
     virtual ~Serializable()= default;
     virtual void listSync(){};
@@ -113,8 +111,8 @@ template <typename T>
 class SerializableVector : public Serializable
 {
 public:
-    void save(json &j) override;
-    void load(const json &j) override;
+    void save(nlohmann::json &j) override;
+    void load(const nlohmann::json &j) override;
     std::vector<T>& get();
 private:
     std::vector<T> mVec;
@@ -122,11 +120,11 @@ private:
 };
 
 template<typename T>
-void SerializableVector<T>::save(json &j)
+void SerializableVector<T>::save(nlohmann::json &j)
 {
     for(auto& elem : mVec)
     {
-        json jElem;
+        nlohmann::json jElem;
         Saver<T, std::derived_from<T, Serializable>> mSaver{&elem};
         mSaver.save(jElem);
         j.push_back(std::move(jElem));
@@ -134,7 +132,7 @@ void SerializableVector<T>::save(json &j)
 }
 
 template<typename T>
-void SerializableVector<T>::load(const json &j)
+void SerializableVector<T>::load(const nlohmann::json &j)
 {
     mVec.clear();
     for(const auto& jElem : j)
@@ -156,8 +154,8 @@ template <typename KeyType, typename ValueType>
 class SerializableMap : public Serializable
 {
 public:
-    void save(json &j) override;
-    void load(const json &j) override;
+    void save(nlohmann::json &j) override;
+    void load(const nlohmann::json &j) override;
     std::map<KeyType, ValueType>& get();
 private:
     std::map<KeyType, ValueType> mMap;
@@ -166,11 +164,11 @@ private:
 };
 
 template <typename KeyType, typename ValueType>
-void SerializableMap<KeyType, ValueType>::save(json &j)
+void SerializableMap<KeyType, ValueType>::save(nlohmann::json &j)
 {
     for(auto& elem : mMap)
     {
-        json jElem;
+        nlohmann::json jElem;
         Saver<KeyType, std::derived_from<KeyType, Serializable>> mKeySaver{const_cast<KeyType*>(&elem.first)};
         Saver<ValueType, std::derived_from<ValueType, Serializable>> mValueSaver{const_cast<ValueType*>(&elem.second)};
         mKeySaver.save(jElem["key"]);
@@ -180,7 +178,7 @@ void SerializableMap<KeyType, ValueType>::save(json &j)
 }
 
 template <typename KeyType, typename ValueType>
-void SerializableMap<KeyType, ValueType>::load(const json &j)
+void SerializableMap<KeyType, ValueType>::load(const nlohmann::json &j)
 {
     mMap.clear();
     for(const auto& jElem : j)
@@ -212,8 +210,8 @@ public:
     };
     SerializablePolymorphicVector(const std::function<std::shared_ptr<T>(const std::string&)> &factory);
     std::vector<PolymorphicSharedPtr>& get();
-    void save(json &j) override;
-    void load(const json &j) override;
+    void save(nlohmann::json &j) override;
+    void load(const nlohmann::json &j) override;
 private:
     std::vector<PolymorphicSharedPtr> mVec;
     std::function<std::shared_ptr<T>(const std::string&)> mFactory;
@@ -233,11 +231,11 @@ std::vector<typename SerializablePolymorphicVector<T>::PolymorphicSharedPtr> &Se
 }
 
 template<typename T>
-void SerializablePolymorphicVector<T>::save(json &j)
+void SerializablePolymorphicVector<T>::save(nlohmann::json &j)
 {
     for(auto& elem : mVec)
     {
-        json jElem;
+        nlohmann::json jElem;
         Saver<T, std::derived_from<T, Serializable>> mSaver{elem.ptr.get()};
         jElem["type"] = elem.typeName;
         mSaver.save(jElem["data"]);
@@ -246,7 +244,7 @@ void SerializablePolymorphicVector<T>::save(json &j)
 }
 
 template<typename T>
-void SerializablePolymorphicVector<T>::load(const json &j)
+void SerializablePolymorphicVector<T>::load(const nlohmann::json &j)
 {
     mVec.clear();
     for(const auto& jElem : j)

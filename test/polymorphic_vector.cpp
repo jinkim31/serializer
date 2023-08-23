@@ -87,7 +87,7 @@ int main()
         animal.ptr->print();
     }
 
-    json save;
+    nlohmann::json save;
     vec.save(save);
     std::cout<<save<<std::endl;
 
