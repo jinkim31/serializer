@@ -79,25 +79,27 @@ int main()
 {
     std::srand(0);
 
-    SerializablePolymorphicVector<Animal> vec;
-    vec.setFactory(factory);
-    vec.get().push_back({std::make_shared<Dog>(), "Dog"});
-    vec.get().push_back({std::make_shared<Cat>(), "Cat"});
-    for(const auto& animal : vec.get())
+    SerializablePolymorphicMap<int, Animal> map;
+    map.setFactory(factory);
+    map.get().insert({0, {std::make_shared<Dog>(), "Dog"}});
+    map.get().insert({1, {std::make_shared<Cat>(), "Cat"}});
+    for(const auto& animal : map.get())
     {
-        animal.ptr->print();
+        std::cout<<"id "<<animal.first<<": ";
+        animal.second.ptr->print();
     }
 
     nlohmann::json save;
-    vec.save(save);
-    std::cout<<save<<std::endl;
+    map.save(save);
+    std::cout<<std::setw(4)<<save<<std::endl;
 
-    SerializablePolymorphicVector<Animal> vecLoad;
-    vecLoad.setFactory(factory);
-    vecLoad.load(save);
-    for(const auto& animal : vecLoad.get())
+    SerializablePolymorphicMap<int, Animal> mapLoad;
+    mapLoad.setFactory(factory);
+    mapLoad.load(save);
+    for(const auto& animal : mapLoad.get())
     {
-        animal.ptr->print();
+        std::cout<<"id "<<animal.first<<": ";
+        animal.second.ptr->print();
     }
     return 0;
 }

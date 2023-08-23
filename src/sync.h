@@ -204,22 +204,24 @@ std::map<KeyType, ValueType>& SerializableMap<KeyType, ValueType>::get()
 }
 
 template <typename T>
+struct PolymorphicSharedPtr
+{
+    std::shared_ptr<T> ptr;
+    std::string typeName;
+};
+
+template <typename T>
 class SerializablePolymorphicVector : public Serializable
 {
 public:
-    struct PolymorphicSharedPtr
-    {
-        std::shared_ptr<T> ptr;
-        std::string typeName;
-    };
     SerializablePolymorphicVector();
     void setFactory(const std::function<std::shared_ptr<T>(const std::string&)> &factory);
     std::shared_ptr<T> pushFromFactory(const std::string& typeName);
-    std::vector<PolymorphicSharedPtr>& get();
+    std::vector<PolymorphicSharedPtr<T>>& get();
     void save(nlohmann::json &j) override;
     void load(const nlohmann::json &j) override;
 private:
-    std::vector<PolymorphicSharedPtr> mVec;
+    std::vector<PolymorphicSharedPtr<T>> mVec;
     std::function<std::shared_ptr<T>(const std::string&)> mFactory;
     Loader<T, std::derived_from<T, Serializable>> mLoader;
 };
@@ -245,7 +247,7 @@ std::shared_ptr<T> SerializablePolymorphicVector<T>::pushFromFactory(const std::
 }
 
 template<typename T>
-std::vector<typename SerializablePolymorphicVector<T>::PolymorphicSharedPtr> &SerializablePolymorphicVector<T>::get()
+std::vector<PolymorphicSharedPtr<T>> &SerializablePolymorphicVector<T>::get()
 {
     return mVec;
 }
@@ -272,13 +274,96 @@ void SerializablePolymorphicVector<T>::load(const nlohmann::json &j)
     mVec.clear();
     for(const auto& jElem : j)
     {
-        PolymorphicSharedPtr elem;
+        PolymorphicSharedPtr<T> elem;
         std::shared_ptr<T> ptr = mFactory(jElem["type"]);
         if(!ptr)
             throw std::runtime_error("[Sync] Factory returned nullptr while SerializablePolymorphicVector load().");
         mLoader.mPtr = ptr.get();
         mLoader.load(jElem["data"]);
         mVec.push_back({ptr, jElem["type"]});
+    }
+    onSyncLoad();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename KeyType, typename ValueType>
+class SerializablePolymorphicMap : public Serializable
+{
+public:
+    SerializablePolymorphicMap();
+    void setFactory(const std::function<std::shared_ptr<ValueType>(const std::string&)> &factory);
+    std::shared_ptr<ValueType> pushFromFactory(const KeyType &key, const std::string &typeName);
+    std::map<KeyType, PolymorphicSharedPtr<ValueType>>& get();
+    void save(nlohmann::json &j) override;
+    void load(const nlohmann::json &j) override;
+private:
+    std::map<KeyType, PolymorphicSharedPtr<ValueType>> mMap;
+    std::function<std::shared_ptr<ValueType>(const std::string&)> mFactory;
+    Loader<ValueType, std::derived_from<ValueType, Serializable>> mValueLoader;
+    Loader<KeyType, std::derived_from<KeyType, Serializable>> mKeyLoader;
+};
+
+template <typename KeyType, typename ValueType>
+SerializablePolymorphicMap<KeyType, ValueType>::SerializablePolymorphicMap()
+{
+    mFactory = nullptr;
+}
+
+template <typename KeyType, typename ValueType>
+void SerializablePolymorphicMap<KeyType, ValueType>::setFactory(const std::function<std::shared_ptr<ValueType>(const std::string&)> &factory)
+{
+    mFactory = factory;
+}
+
+template <typename KeyType, typename ValueType>
+std::shared_ptr<ValueType>
+SerializablePolymorphicMap<KeyType, ValueType>::pushFromFactory(const KeyType &key, const std::string &typeName)
+{
+    auto ptr = mFactory(typeName);
+    mMap.push_back({ptr, typeName});
+    return ptr;
+}
+
+template <typename KeyType, typename ValueType>
+std::map<KeyType, PolymorphicSharedPtr<ValueType>> &SerializablePolymorphicMap<KeyType, ValueType>::get()
+{
+    return mMap;
+}
+
+template <typename KeyType, typename ValueType>
+void SerializablePolymorphicMap<KeyType, ValueType>::save(nlohmann::json &j)
+{
+    for(auto& elem : mMap)
+    {
+        nlohmann::json jElem;
+        Saver<KeyType, std::derived_from<KeyType, Serializable>> mKeySaver{const_cast<KeyType*>(&elem.first)};
+        Saver<ValueType, std::derived_from<ValueType, Serializable>> mValueSaver{const_cast<ValueType*>(elem.second.ptr.get())};
+        jElem["type"] = elem.second.typeName;
+        mKeySaver.save(jElem["key"]);
+        mValueSaver.save(jElem["value"]);
+        j.push_back(std::move(jElem));
+    }
+    onSyncSave();
+}
+
+template <typename KeyType, typename ValueType>
+void SerializablePolymorphicMap<KeyType, ValueType>::load(const nlohmann::json &j)
+{
+    if(!mFactory)
+        throw std::runtime_error("[Sync] Factory for SerializablePolymorphicVector is not assigned. Load failed.");
+    mMap.clear();
+    for(const auto& jElem : j)
+    {
+        PolymorphicSharedPtr<ValueType> elem;
+        std::shared_ptr<ValueType> ptr = mFactory(jElem["type"]);
+        if(!ptr)
+            throw std::runtime_error("[Sync] Factory returned nullptr while SerializablePolymorphicVector load().");
+        KeyType key;
+        mKeyLoader.mPtr = &key;
+        mKeyLoader.load(jElem["key"]);
+        mValueLoader.mPtr = ptr.get();
+        mValueLoader.load(jElem["value"]);
+        mMap.insert(std::pair<int, PolymorphicSharedPtr<ValueType>>(std::move(key), {ptr, jElem["type"]}));
     }
     onSyncLoad();
 }

@@ -13,3 +13,6 @@ target_link_libraries(test PRIVATE sync)
 
 add_executable(test_polymorphic_vector test/polymorphic_vector.cpp)
 target_link_libraries(test_polymorphic_vector PRIVATE sync)
+
+add_executable(test_polymorphic_map test/polymorphic_map.cpp)
+target_link_libraries(test_polymorphic_map PRIVATE sync)
