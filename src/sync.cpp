@@ -20,4 +20,5 @@ void sync::Serializable::load(const nlohmann::json &j)
         sync->load(j[sync->name()]);
     }
     onSyncLoad();
+    syncInit();
 }

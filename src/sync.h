@@ -6,6 +6,7 @@
 #include <iostream>
 #include <concepts>
 #include <functional>
+#include <map>
 
 namespace sync
 {
@@ -97,6 +98,7 @@ protected:
     virtual void listSync(){};
     virtual void onSyncSave(){};
     virtual void onSyncLoad(){};
+    virtual void syncInit(){};
     template <typename T>
     void sync(T* ptr, const std::string& name)
     {
@@ -363,7 +365,7 @@ void SerializablePolymorphicMap<KeyType, ValueType>::load(const nlohmann::json &
         mKeyLoader.load(jElem["key"]);
         mValueLoader.mPtr = ptr.get();
         mValueLoader.load(jElem["value"]);
-        mMap.insert(std::pair<int, PolymorphicSharedPtr<ValueType>>(std::move(key), {ptr, jElem["type"]}));
+        mMap.insert(std::pair<KeyType, PolymorphicSharedPtr<ValueType>>(std::move(key), {ptr, jElem["type"]}));
     }
     onSyncLoad();
 }
