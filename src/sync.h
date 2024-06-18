@@ -8,7 +8,7 @@
 #include <functional>
 #include <map>
 
-namespace sync
+namespace jsync
 {
 
 // forward decl
@@ -98,9 +98,8 @@ protected:
     virtual void listSync(){};
     virtual void onSyncSave(){};
     virtual void onSyncLoad(){};
-    virtual void syncInit(){};
     template <typename T>
-    void sync(T* ptr, const std::string& name)
+    void addSync(T* ptr, const std::string& name)
     {
         auto sync = std::make_shared<Sync<T>>(ptr, name);
         mSyncs.emplace_back(sync);
@@ -352,14 +351,14 @@ template <typename KeyType, typename ValueType>
 void SerializablePolymorphicMap<KeyType, ValueType>::load(const nlohmann::json &j)
 {
     if(!mFactory)
-        throw std::runtime_error("[Sync] Factory for SerializablePolymorphicVector is not assigned. Load failed.");
+        throw std::runtime_error("[Sync] Factory for SerializablePolymorphicMap is not assigned. Load failed.");
     mMap.clear();
     for(const auto& jElem : j)
     {
         PolymorphicSharedPtr<ValueType> elem;
         std::shared_ptr<ValueType> ptr = mFactory(jElem["type"]);
         if(!ptr)
-            throw std::runtime_error("[Sync] Factory returned nullptr while SerializablePolymorphicVector load().");
+            throw std::runtime_error("[Sync] Factory returned nullptr while SerializablePolymorphicMap load().");
         KeyType key;
         mKeyLoader.mPtr = &key;
         mKeyLoader.load(jElem["key"]);

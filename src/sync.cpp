@@ -1,6 +1,6 @@
 #include "sync.h"
 
-void sync::Serializable::save(nlohmann::json &j)
+void jsync::Serializable::save(nlohmann::json &j)
 {
     mSyncs.clear();
     listSync();
@@ -11,7 +11,7 @@ void sync::Serializable::save(nlohmann::json &j)
     onSyncSave();
 }
 
-void sync::Serializable::load(const nlohmann::json &j)
+void jsync::Serializable::load(const nlohmann::json &j)
 {
     mSyncs.clear();
     listSync();
@@ -20,5 +20,4 @@ void sync::Serializable::load(const nlohmann::json &j)
         sync->load(j[sync->name()]);
     }
     onSyncLoad();
-    syncInit();
 }
